@@ -55,17 +55,21 @@ void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
 // - Create a pointer to the node in the list with the lowest sum.
 // - Remove that node from the open_list.
 // - Return the pointer.
+bool Compare(const RouteModel::Node* a, const RouteModel::Node* b) {
+  float f1 = a->g_value + a->h_value; // f1 = g1 + h1
+  float f2 = b->g_value + b->h_value; // f2 = g2 + h2
+  return f1 > f2; 
+}
 
 RouteModel::Node *RoutePlanner::NextNode() {
-  std::sort(open_list.begin(), open_list.end(), this->Compare);
+  std::sort(open_list.begin(), open_list.end(), Compare);
+  RouteModel::Node* next_node = open_list.back(); // Get the last element (node with lowest f-value)
+  open_list.pop_back();                             // Remove the last element
+  return next_node;                                // Return the node
 }
 
 /** Compare the F values of two cells. */
-bool RoutePlanner::Compare(const RouteModel::Node &a, const RouteModel::Node &b) {
-  float f1 = a.g_value + a.h_value; // f1 = g1 + h1
-  float f2 = b.g_value + b.h_value; // f2 = g2 + h2
-  return f1 > f2; 
-}
+
 
 // TODO 6: Complete the ConstructFinalPath method to return the final path found from your A* search.
 // Tips:
@@ -81,7 +85,13 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
     std::vector<RouteModel::Node> path_found;
 
     // TODO: Implement your solution here.
-
+  	while(current_node != start_node) {
+      path_found.push_back(*current_node);
+      distance += current_node->distance(*current_node->parent);
+      current_node = current_node->parent;
+    }
+    path_found.push_back(*current_node);
+    std::reverse(path_found.begin(), path_found.end());  // Reverse the path to get the correct order (start to end)
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return path_found;
 
@@ -97,7 +107,22 @@ std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node 
 
 void RoutePlanner::AStarSearch() {
     RouteModel::Node *current_node = nullptr;
+    // TODO: Implement your solution here.'
+    current_node = start_node;
+    open_list.push_back(current_node);
+    current_node->visited = true;
+	while(open_list.size() >0) {
+      current_node = NextNode();
+      
+	  if (current_node == end_node) {
+        m_Model.path = ConstructFinalPath(current_node); 
+        return;
+      }
 
-    // TODO: Implement your solution here.
-
+      if (!current_node->visited) {
+        AddNeighbors(current_node);
+        current_node->visited = true; // Mark the node as visited after processing
+      }
+      
+    }
 }
