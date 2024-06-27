@@ -118,11 +118,6 @@ void RoutePlanner::AStarSearch() {
         m_Model.path = ConstructFinalPath(current_node); 
         return;
       }
-
-      if (!current_node->visited) {
         AddNeighbors(current_node);
-        current_node->visited = true; // Mark the node as visited after processing
-      }
-      
     }
 }
